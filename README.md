@@ -1,149 +1,137 @@
 # FakeShield — Fake Review Detection Web App
-### Capstone Project · Student 4 · Web Application Module
+
+FakeShield is a small Flask web application that detects likely fake product/service reviews using a combination of sentiment heuristics and an optional SVM + TF-IDF model. The app includes a clean frontend for quick, interactive checks and API endpoints for programmatic use.
 
 ---
 
-## 📁 Project Structure
+## Project layout
 
 ```
 fake_review_detector/
-│
-├── app.py                    ← Flask backend (main file)
-├── requirements.txt          ← Python dependencies
-├── README.md
-│
-├── model/                    ← PUT TEAMMATE'S FILES HERE
-│   ├── svm_model.pkl         ← From Student 2
-│   └── tfidf_vectorizer.pkl  ← From Student 1
-│
-├── templates/
-│   └── index.html            ← Main UI page
-│
-└── static/
-    ├── css/style.css         ← Styling
-    └── js/app.js             ← Frontend logic
+├── app.py                    # Flask backend (main file)
+├── requirements.txt          # Python dependencies
+├── README.md                 # This file
+├── model/                    # Put trained model files here (see below)
+├── templates/                # Jinja2 HTML templates
+│   └── index.html            # Main UI page
+└── static/                   # CSS, JS, images
+  ├── css/style.css
+  └── js/app.js
 ```
 
 ---
 
-## ⚙️ Setup Instructions
+## Quick start (development)
 
-### Step 1 — Install Python dependencies
-```bash
+1. Create and activate a Python virtual environment (Windows PowerShell):
+
+```powershell
+cd fake_review_detector
+python -m venv .venv
+. .venv\Scripts\Activate.ps1
+```
+
+2. Install dependencies:
+
+```powershell
+pip install --upgrade pip
 pip install -r requirements.txt
 python -m textblob.download_corpora
 ```
 
-### Step 2 — Add model files (from teammates)
-Place these files inside the `model/` folder:
-- `svm_model.pkl` → from **Student 2** (trained SVM model)
-- `tfidf_vectorizer.pkl` → from **Student 1** (fitted TF-IDF vectorizer)
+3. Run the app:
 
-> ⚠️ Without these files, the app runs in **Demo Mode** using rule-based logic.
-
-### Step 3 — Run the app
-```bash
+```powershell
 python app.py
 ```
-Open your browser at: **http://localhost:5000**
+
+Open `http://127.0.0.1:5000/` in your browser.
 
 ---
 
-## 🔗 How It Connects to Other Parts
+## Model files (required for full accuracy)
 
-| Module | File | What it does |
-|--------|------|--------------|
-| Student 1 (Features) | `tfidf_vectorizer.pkl` | Transforms review text into TF-IDF vector |
-| Student 2 (Model) | `svm_model.pkl` | Predicts FAKE or REAL label |
-| Student 3 (Evaluation) | — | Use `/health` endpoint to verify model is loaded |
-| Student 5 (Advanced) | `app.py` → add new route | Add `/predict-url` route for link-based checking |
+Place the trained model artifacts in the `model/` folder:
+
+- `classifier_model.pkl` (SVM or other classifier)
+- `tfidf_vectorizer.pkl` (TF-IDF vectorizer used during training)
+
+If these files are missing the app falls back to a demo rule-based analyzer (still useful for testing UI and integration).
 
 ---
 
-## 🌐 API Endpoints
+## API
 
-### POST `/predict`
-Send a review text, get prediction back.
+POST `/predict`
+- Description: analyze a single review string and return prediction + features.
+- Request JSON:
 
-**Request:**
 ```json
-{ "review": "This product is absolutely amazing!!" }
+{ "review": "This product is amazing! Best purchase ever!" }
 ```
 
-**Response:**
-```json
-{
-  "label": "FAKE",
-  "confidence": 87.3,
-  "demo_mode": false,
-  "features": {
-    "sentiment_polarity": 0.8,
-    "sentiment_subjectivity": 0.75,
-    "word_count": 7,
-    "exclamation_count": 2,
-    "upper_ratio": 0.02
-  }
-}
+- Example (PowerShell):
+
+```powershell
+Invoke-RestMethod -Method POST -Uri http://127.0.0.1:5000/predict -ContentType application/json -Body '{"review":"This product is amazing!"}' | ConvertTo-Json
 ```
 
-### GET `/health`
-Check if model files are loaded.
-```json
-{ "status": "ok", "model_loaded": true, "vectorizer_loaded": true }
+GET `/health`
+- Description: returns whether model and vectorizer files are present on disk.
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:5000/health
+```
+
+Responses are JSON objects with keys such as `label`, `confidence`, `demo_mode`, and a `features` block.
+
+---
+
+## Frontend
+
+The UI is at `templates/index.html` and static assets in `static/`. The frontend uses fetch to call `/predict` and `/health`. Sample reviews and history are implemented in `static/js/app.js`.
+
+---
+
+## Recommended next steps
+
+- Move trained `*.pkl` model files to a release asset or enable Git LFS for `model/*.pkl` to avoid bloating the repo.
+- Add a small CI workflow (GitHub Actions) to run linting and basic tests on push.
+- Containerize with Docker for reproducible deployment.
+
+---
+
+## Docker (optional)
+
+Example Dockerfile snippet (simple):
+
+```dockerfile
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . /app
+EXPOSE 5000
+CMD ["python", "app.py"]
 ```
 
 ---
 
-## 🤝 For Student 2 — Saving the Model
+## Contributing
 
-After training, save the model like this:
-```python
-import pickle
-
-# Save the SVM model
-with open("model/svm_model.pkl", "wb") as f:
-    pickle.dump(svm_model, f)
-
-# Save the TF-IDF vectorizer (Student 1 does this)
-with open("model/tfidf_vectorizer.pkl", "wb") as f:
-    pickle.dump(tfidf_vectorizer, f)
-```
+1. Fork the repo
+2. Create a feature branch
+3. Open a PR with a clear description
 
 ---
 
-## 🤝 For Student 5 — Adding Advanced Features
+## License
 
-To add a URL/link-based review checker, add this route to `app.py`:
-```python
-@app.route("/predict-url", methods=["POST"])
-def predict_url():
-    data = request.get_json()
-    url = data.get("url", "")
-    # scrape reviews from url, then call predict_review() on each
-    ...
-```
+This project is provided as-is for educational purposes. Add your preferred license file if needed.
 
 ---
 
-## 🎨 Features of the Web App
-- ✅ Clean, dark-themed professional UI
-- ✅ Real-time character & word count
-- ✅ Sample review buttons for demo
-- ✅ Confidence score with animated ring
-- ✅ Feature breakdown (sentiment, word count, etc.)
-- ✅ Last 5 checks history
-- ✅ Demo mode (works without model file)
-- ✅ Live model badge when model is loaded
-- ✅ Mobile responsive
+If you want, I can also:
 
-
-Hello Brother I am Nilesh Kumawat :-
-i have done my work on google colab and did some modification ,you can try this now 
- 1. open the folder with terminal 
- 2. install flask pandas scikit-learn nltk textblob using pip
- 3. run python app.py
- 4. you can check now the review is fake or genuine .
- 5. I will add some more feature within 3 to 4 days.
- 6. You can try this and add some more feature
-
- bhai mene isko modify kiya app.py ko ab agle member ki baari 
+- Add a `.github/workflows/python-app.yml` CI workflow.
+- Convert the `model/` files to use Git LFS and rewrite history if you prefer.
