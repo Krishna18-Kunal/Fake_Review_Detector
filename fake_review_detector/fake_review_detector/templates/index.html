@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FakeShield — Review Detector</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  
+</head>
+<body>
+
+  <!-- Background grid -->
+  <div class="bg-grid"></div>
+  <div class="bg-glow"></div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">
+      <span class="logo-icon">⚡</span>
+      <span class="logo-text">FakeShield</span>
+    </div>
+    <nav class="nav-pills">
+      <span class="nav-pill active">Detector</span>
+      <span class="nav-pill">About</span>
+    </nav>
+    <div id="modelBadge" class="model-badge demo">DEMO MODE</div>
+  </header>
+
+  <!-- Hero -->
+  <main class="main">
+    <section class="hero">
+      <div class="hero-tag">AI-Powered Detection</div>
+      <h1 class="hero-title">
+        Spot the <span class="highlight">Fake.</span><br/>
+        Trust the <span class="highlight-alt">Real.</span>
+      </h1>
+      <p class="hero-sub">
+        Paste any product or service review below. Our SVM model analyzes
+        sentiment, word patterns &amp; TF-IDF features to detect deception.
+      </p>
+    </section>
+
+    <!-- Input Card -->
+    <div class="card input-card">
+      <div class="card-label">REVIEW INPUT</div>
+      <textarea
+        id="reviewInput"
+        class="review-textarea"
+        placeholder="Paste the review here… e.g. 'This product is absolutely amazing! Best purchase ever!!'"
+        rows="5"
+      ></textarea>
+      <div class="input-meta">
+        <span id="charCount" class="char-count">0 characters · 0 words</span>
+        <div class="input-actions">
+          <button class="btn-ghost" id="clearBtn">Clear</button>
+          <button class="btn-primary" id="analyzeBtn">
+            <span class="btn-text">Analyze Review</span>
+            <span class="btn-icon">→</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sample Reviews -->
+    <div class="samples-section">
+      <span class="samples-label">Try a sample:</span>
+      <div class="sample-pills">
+        <button class="sample-pill" data-text="This product is absolutely amazing!! Best thing I ever bought. Works perfectly and arrived super fast. 5 stars!!!">😍 Suspicious</button>
+        <button class="sample-pill" data-text="The product works as described. Build quality is decent for the price. Delivery took 5 days. Would recommend for casual use.">✅ Genuine</button>
+        <button class="sample-pill" data-text="WOW WOW WOW!! Changed my life!! Every person NEEDS this!! BUY NOW you won't regret it!!!">🚨 Very Fake</button>
+      </div>
+    </div>
+
+    <!-- Result Card (hidden until analysis) -->
+    <div class="card result-card hidden" id="resultCard">
+      <div class="card-label">ANALYSIS RESULT</div>
+
+      <div class="result-main">
+        <div class="verdict-badge" id="verdictBadge">—</div>
+        <div class="verdict-info">
+          <div class="verdict-title" id="verdictTitle">Analyzing…</div>
+          <div class="verdict-sub" id="verdictSub"></div>
+        </div>
+        <div class="confidence-ring-wrap">
+          <svg class="confidence-ring" viewBox="0 0 80 80">
+            <circle class="ring-bg" cx="40" cy="40" r="32"/>
+            <circle class="ring-fill" id="ringFill" cx="40" cy="40" r="32"
+              stroke-dasharray="201" stroke-dashoffset="201"/>
+          </svg>
+          <div class="confidence-label">
+            <span id="confidenceNum">0</span><small>%</small>
+            <div class="conf-text">confidence</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature breakdown -->
+      <div class="features-grid">
+        <div class="feature-box">
+          <div class="feature-icon">💬</div>
+          <div class="feature-label">Word Count</div>
+          <div class="feature-value" id="featWordCount">—</div>
+        </div>
+        <div class="feature-box">
+          <div class="feature-icon">🎭</div>
+          <div class="feature-label">Sentiment</div>
+          <div class="feature-value" id="featSentiment">—</div>
+        </div>
+        <div class="feature-box">
+          <div class="feature-icon">📊</div>
+          <div class="feature-label">Subjectivity</div>
+          <div class="feature-value" id="featSubjectivity">—</div>
+        </div>
+        <div class="feature-box">
+          <div class="feature-icon">❗</div>
+          <div class="feature-label">Exclamations</div>
+          <div class="feature-value" id="featExclamation">—</div>
+        </div>
+      </div>
+
+      <div id="demoNotice" class="demo-notice hidden">
+        ⚠️ Running in Demo Mode — connect Student 2's model file for full accuracy.
+      </div>
+    </div>
+
+    <!-- History -->
+    <div class="history-section hidden" id="historySection">
+      <div class="history-header">
+        <span class="card-label">RECENT CHECKS</span>
+        <button class="btn-ghost small" id="clearHistory">Clear</button>
+      </div>
+      <div id="historyList" class="history-list"></div>
+    </div>
+
+  </main>
+
+  <footer class="footer">
+    <span>FakeShield · Capstone Project · Group 5</span>
+    <span>SVM · TF-IDF · Sentiment Analysis</span>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
