@@ -1,4 +1,4 @@
-﻿// ── FakeShield Frontend Logic ──────────────────────
+// ── FakeShield Frontend Logic ──────────────────────
 
 const reviewInput   = document.getElementById("reviewInput");
 const analyzeBtn    = document.getElementById("analyzeBtn");
