@@ -1,4 +1,4 @@
-// ── FakeShield Frontend Logic ──────────────────────
+﻿// ── FakeShield Frontend Logic ──────────────────────
 
 const reviewInput   = document.getElementById("reviewInput");
 const analyzeBtn    = document.getElementById("analyzeBtn");
@@ -69,7 +69,7 @@ async function analyzeReview() {
     displayResult(data, review);
     addToHistory(data, review);
 
-  } catch (err) {
+  } catch (_err) {
     showInlineError("Network error. Make sure the Flask server is running.");
   } finally {
     setLoading(false);
@@ -77,7 +77,7 @@ async function analyzeReview() {
 }
 
 // ── Display result ──────────────────────────────
-function displayResult(data, reviewText) {
+function displayResult(data) {
   const { label, confidence, features, demo_mode } = data;
   const isFake = label === "FAKE";
 
