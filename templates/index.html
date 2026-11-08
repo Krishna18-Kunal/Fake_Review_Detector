@@ -1,0 +1,1093 @@
+﻿
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FakeShield — Review Detector</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    .hidden-section { display: none !important; }
+    .nav-pill { cursor: pointer; }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    @media(min-width:768px) {
+      .about-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .member-card {
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.08);
+      padding: 16px;
+      border-radius: 12px;
+    }
+
+    .member-name {
+      font-family: Syne,sans-serif;
+      font-weight: 700;
+      color: #ff4b2b;
+      font-size: 1.1rem;
+    }
+
+    .member-role {
+      font-size: .85rem;
+      color: #9ca3af;
+      margin-bottom: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .member-desc {
+      font-size: .9rem;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+
+    .chart-container {
+      background: rgba(255,255,255,.02);
+      border: 1px solid rgba(255,255,255,.05);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 24px;
+      position: relative;
+      width: 100%;
+      height: 220px;
+    }
+
+    .header {
+      position: sticky;
+      top: 15px;
+      margin: 10px 20px 25px;
+      padding: 14px 28px;
+      background: rgba(18,18,29,.65);
+      backdrop-filter: blur(12px) saturate(180%);
+      -webkit-backdrop-filter: blur(12px) saturate(180%);
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.1);
+      box-shadow: 0 10px 20px -5px rgba(0,0,0,.5);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .logo-text {
+      font-family: Syne,sans-serif;
+      font-weight: 800;
+      letter-spacing: -.02em;
+    }
+
+    .stats-counter-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .stat-counter-box,
+    .bulk-metric-box {
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.06);
+      padding: 14px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .stat-counter-title {
+      font-size: .72rem;
+      font-weight: 700;
+      color: #9ca3af;
+      text-transform: uppercase;
+    }
+
+    .stat-counter-num {
+      font-family: Syne,sans-serif;
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-top: 6px;
+    }
+
+    .bulk-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    @media(min-width:600px) {
+      .bulk-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .bulk-metric-val {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-top: 4px;
+    }
+
+    .download-csv-btn {
+      margin: 0 0 14px;
+      padding: 11px 18px;
+      background: linear-gradient(135deg,#11998e,#38ef7d);
+      color: #071b16;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .download-csv-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 18px rgba(56,239,125,.2);
+    }
+
+    .table-scroll {
+      max-height: 400px;
+      overflow: auto;
+      border: 1px solid rgba(255,255,255,.05);
+      border-radius: 8px;
+      background: rgba(0,0,0,.2);
+    }
+
+    .result-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: .85rem;
+      color: #cbd5e1;
+    }
+
+    .result-table th {
+      position: sticky;
+      top: 0;
+      background: #1e1e2f;
+      color: #fff;
+      padding: 10px;
+      z-index: 2;
+    }
+
+    .result-table td {
+      padding: 8px;
+      border-bottom: 1px solid rgba(255,255,255,.03);
+    }
+
+    .review-cell {
+      max-width: 350px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media(max-width:600px) {
+      .header { margin: 8px; padding: 12px; }
+      .stats-counter-grid { gap: 6px; }
+      .stat-counter-num { font-size: 1.3rem; }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<header class="header">
+  <div class="logo">
+    <span class="logo-icon">⚡</span>
+    <span class="logo-text">FakeShield</span>
+  </div>
+
+  <nav class="nav-pills">
+    <span class="nav-pill active" id="pill-detector" onclick="switchTab('detector')">Detector</span>
+    <span class="nav-pill" id="pill-about" onclick="switchTab('about')">About</span>
+  </nav>
+
+  <div id="modelBadge" class="model-badge demo">PRODUCTION MODE</div>
+</header>
+
+<main class="main">
+
+<section class="hero" style="margin-top:10px">
+  <div class="hero-tag">AI-Powered Detection Engine</div>
+  <h1 class="hero-title">
+    Spot the <span class="highlight">Fake.</span><br>
+    Trust the <span class="highlight-alt">Real.</span>
+  </h1>
+  <p class="hero-sub">
+    Paste any product review or upload an entire analytical spreadsheet dataset.
+  </p>
+</section>
+
+<div id="detector-section">
+
+  <!-- SINGLE REVIEW -->
+  <div class="card input-card">
+    <div class="card-label">SINGLE / MULTIPLE REVIEW INPUT</div>
+
+    <textarea id="reviewInput"
+      class="review-textarea"
+      placeholder="Paste single review OR multiple lines separated by new line / ---..."
+      rows="5"></textarea>
+
+    <div class="input-meta">
+      <span id="charCount" class="char-count">0 characters · 0 words</span>
+
+      <div class="input-actions">
+        <button class="btn-ghost" onclick="clearText()">Clear</button>
+
+        <button class="btn-primary" id="analyzeBtn" onclick="analyzeReview()">
+          <span class="btn-text" id="btnText">Analyze Content</span>
+          <span class="btn-icon">→</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COUNTERS -->
+  <div class="stats-counter-grid">
+    <div class="stat-counter-box" style="border-bottom:3px solid #00c6ff">
+      <div class="stat-counter-title">Total Checked</div>
+      <div class="stat-counter-num" id="totalCheckedCount" style="color:#00c6ff">0</div>
+    </div>
+
+    <div class="stat-counter-box" style="border-bottom:3px solid #10b981">
+      <div class="stat-counter-title">Genuine Reviews</div>
+      <div class="stat-counter-num" id="genuineCheckedCount" style="color:#10b981">0</div>
+    </div>
+
+    <div class="stat-counter-box" style="border-bottom:3px solid #ef4444">
+      <div class="stat-counter-title">Fake Reviews</div>
+      <div class="stat-counter-num" id="fakeCheckedCount" style="color:#ef4444">0</div>
+    </div>
+  </div>
+
+  <!-- SAMPLE BUTTONS -->
+  <div class="samples-section">
+    <span class="samples-label">Try a sample text:</span>
+    <div class="sample-pills">
+      <button class="sample-pill" onclick="setSample('genuine')">✅ Sample Genuine</button>
+      <button class="sample-pill" onclick="setSample('fake')">🚨 Sample Fake</button>
+      <button class="sample-pill" onclick="setSample('multi')">📑 Sample Multiple Lines</button>
+    </div>
+  </div>
+
+  <!-- SINGLE RESULT -->
+  <div class="card result-card hidden" id="resultCard">
+    <div class="card-label">SINGLE TEXT METRICS DIAGNOSTICS</div>
+
+    <div class="result-main">
+      <div class="verdict-badge" id="verdictBadge">—</div>
+
+      <div class="verdict-info">
+        <div class="verdict-title" id="verdictTitle">Analyzing…</div>
+        <div class="verdict-sub">Classification based on NLP model.</div>
+      </div>
+
+      <div class="confidence-ring-wrap">
+        <svg class="confidence-ring" viewBox="0 0 80 80">
+          <circle class="ring-bg" cx="40" cy="40" r="32"/>
+          <circle class="ring-fill" id="ringFill" cx="40" cy="40" r="32"
+            stroke-dasharray="201" stroke-dashoffset="201"/>
+        </svg>
+
+        <div class="confidence-label">
+          <span id="confidenceNum">0</span><small>%</small>
+          <div class="conf-text">confidence</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-box">
+        <div class="feature-icon">💬</div>
+        <div class="feature-label">Word Count</div>
+        <div class="feature-value" id="featWordCount">—</div>
+      </div>
+
+      <div class="feature-box">
+        <div class="feature-icon">🎭</div>
+        <div class="feature-label">Sentiment</div>
+        <div class="feature-value" id="featSentiment">—</div>
+      </div>
+
+      <div class="feature-box">
+        <div class="feature-icon">📊</div>
+        <div class="feature-label">Subjectivity</div>
+        <div class="feature-value" id="featSubjectivity">—</div>
+      </div>
+
+      <div class="feature-box">
+        <div class="feature-icon">❗</div>
+        <div class="feature-label">Exclamations</div>
+        <div class="feature-value" id="featExclamation">—</div>
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <canvas id="telemetryChart"></canvas>
+    </div>
+  </div>
+
+  <!-- MULTIPLE REVIEW RESULTS -->
+  <div class="card result-card hidden-section" id="multiTextResultCard"
+       style="border-top:3px solid #ff9f43">
+
+    <div class="card-label">MULTIPLE INPUT ANALYSIS MATRIX</div>
+
+    <div class="bulk-grid">
+      <div class="bulk-metric-box" style="border-left:3px solid #10b981">
+        <div>BATCH GENUINE COUNT</div>
+        <div class="bulk-metric-val" id="multiRealVal" style="color:#10b981">0</div>
+      </div>
+
+      <div class="bulk-metric-box" style="border-left:3px solid #ef4444">
+        <div>BATCH DECEPTIVE COUNT</div>
+        <div class="bulk-metric-val" id="multiFakeVal" style="color:#ef4444">0</div>
+      </div>
+    </div>
+
+    <div id="multiTextTableContainer"></div>
+  </div>
+
+  <!-- BULK CSV PREDICTION -->
+  <div class="card input-card"
+       style="margin-top:24px;border-top:3px solid #38ef7d">
+
+    <div class="card-label" style="color:#38ef7d">
+      📊 BULK DATASET PREDICTOR
+    </div>
+
+    <h3 style="font-family:Syne,sans-serif;color:#fff;margin-top:8px">
+      BULK DATASET PREDICTOR
+    </h3>
+
+    <p style="font-size:.85rem;color:#9ca3af;margin-bottom:16px">
+      Upload a CSV file to scan all reviews and generate predictions.
+    </p>
+
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+      <input type="file" id="bulkUploadFile" accept=".csv"
+             style="display:none" onchange="triggerBulkPredict()">
+
+      <button class="btn-primary"
+              onclick="document.getElementById('bulkUploadFile').click()"
+              style="background:linear-gradient(135deg,#11998e,#38ef7d);border:none">
+        <span class="btn-text" id="bulkBtnText">Run Bulk Prediction</span>
+      </button>
+
+      <span id="bulkUploadStatus" style="font-size:.85rem;color:#9ca3af">
+        No bulk file active
+      </span>
+    </div>
+
+    <div id="bulkResultSection" class="hidden-section"
+         style="border-top:1px solid rgba(255,255,255,.05);padding-top:16px">
+
+      <div class="bulk-grid">
+        <div class="bulk-metric-box" style="border-left:3px solid #10b981">
+          <div>GENUINE REVIEWS COUNT</div>
+          <div class="bulk-metric-val" id="bulkRealVal" style="color:#10b981">0</div>
+        </div>
+
+        <div class="bulk-metric-box" style="border-left:3px solid #ef4444">
+          <div>DECEPTIVE/SPAM COUNT</div>
+          <div class="bulk-metric-val" id="bulkFakeVal" style="color:#ef4444">0</div>
+        </div>
+      </div>
+
+      <div class="chart-container" style="height:240px;margin-top:16px">
+        <canvas id="bulkPieChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODEL RETRAINING -->
+  <div class="card input-card"
+       style="margin-top:24px;border-top:3px solid #00c6ff">
+
+    <div class="card-label">MLOPS CONTINUOUS LEARNING ENGINE</div>
+
+    <h3 style="font-family:Syne,sans-serif;color:#fff;margin-top:8px">
+      Train Model with New Dataset
+    </h3>
+
+    <p style="font-size:.85rem;color:#9ca3af;margin-bottom:16px">
+      Upload a CSV file containing text and label columns to retrain the model.
+    </p>
+
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <input type="file" id="datasetUpload" accept=".csv"
+             style="display:none" onchange="triggerLiveRetrain()">
+
+      <button class="btn-primary"
+              onclick="document.getElementById('datasetUpload').click()"
+              style="background:linear-gradient(135deg,#00c6ff,#0072ff);border:none">
+        <span class="btn-text" id="uploadBtnText">📁 Upload CSV &amp; Retrain</span>
+      </button>
+
+      <span id="uploadStatus" style="font-size:.85rem;color:#9ca3af">
+        No file selected
+      </span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ABOUT -->
+<div id="about-section" class="card input-card hidden-section">
+
+  <div class="card-label">ABOUT THE PROJECT</div>
+
+  <h2 style="font-family:Syne,sans-serif;color:#fff;margin-top:10px">
+    Fake Review Detection Pipeline
+  </h2>
+
+  <p style="font-size:.95rem;color:#9ca3af;margin-top:8px;line-height:1.6">
+    This application processes user feedback patterns to identify artificial
+    ratings manipulation using NLP and machine learning.
+  </p>
+
+
+<div class="card-label fs-section-label" style="margin-top:30px">
+  <span class="fs-label-line"></span>
+  CORE SYSTEM MODULES
+  <span class="fs-label-line"></span>
+</div>
+
+<div class="fs-modules-intro">
+  <h3>Inside the FakeShield Engine</h3>
+  <p>
+    A complete AI-powered pipeline designed to analyze review patterns,
+    detect suspicious content and deliver intelligent insights.
+  </p>
+</div>
+
+<div class="fs-modules-grid">
+
+  <!-- Module 01 -->
+  <div class="fs-module-card fs-module-orange">
+    <div class="fs-module-top">
+      <div class="fs-module-icon">🧹</div>
+      <span class="fs-module-number">01</span>
+    </div>
+    <div class="fs-module-tag">TEXT INTELLIGENCE</div>
+    <h3>Data Processing &amp; NLP</h3>
+    <p>
+      Review cleaning, text normalization, preprocessing and feature
+      extraction to prepare quality data for machine learning.
+    </p>
+    <div class="fs-module-footer">
+      <span>Text Cleaning</span>
+      <span>Feature Extraction</span>
+    </div>
+  </div>
+
+  <!-- Module 02 -->
+  <div class="fs-module-card fs-module-purple">
+    <div class="fs-module-top">
+      <div class="fs-module-icon">🧠</div>
+      <span class="fs-module-number">02</span>
+    </div>
+    <div class="fs-module-tag">AI / ML ENGINE</div>
+    <h3>Machine Learning Engine</h3>
+    <p>
+      TF-IDF vectorization and trained classification models analyze
+      review patterns to identify potentially fake and genuine reviews.
+    </p>
+    <div class="fs-module-footer">
+      <span>TF-IDF</span>
+      <span>ML Classification</span>
+    </div>
+  </div>
+
+  <!-- Module 03 -->
+  <div class="fs-module-card fs-module-blue">
+    <div class="fs-module-top">
+      <div class="fs-module-icon">📊</div>
+      <span class="fs-module-number">03</span>
+    </div>
+    <div class="fs-module-tag">MODEL ANALYTICS</div>
+    <h3>Evaluation &amp; Analytics</h3>
+    <p>
+      Model validation, performance metrics, prediction analysis and
+      result visualization to understand system performance.
+    </p>
+    <div class="fs-module-footer">
+      <span>Model Validation</span>
+      <span>Performance Analysis</span>
+    </div>
+  </div>
+
+  <!-- Module 04 -->
+  <div class="fs-module-card fs-module-green">
+    <div class="fs-module-top">
+      <div class="fs-module-icon">🌐</div>
+      <span class="fs-module-number">04</span>
+    </div>
+    <div class="fs-module-tag">WEB APPLICATION</div>
+    <h3>Interactive Detection Platform</h3>
+    <p>
+      An interactive Flask-based platform supporting single review,
+      multiple review and bulk CSV detection.
+    </p>
+    <div class="fs-module-footer">
+      <span>Flask</span>
+      <span>Interactive UI</span>
+    </div>
+  </div>
+
+  <!-- Module 05 -->
+  <div class="fs-module-card fs-module-pink">
+    <div class="fs-module-top">
+      <div class="fs-module-icon">📁</div>
+      <span class="fs-module-number">05</span>
+    </div>
+    <div class="fs-module-tag">SMART REPORTING</div>
+    <h3>Reporting &amp; Management</h3>
+    <p>
+      Prediction summaries, downloadable CSV reports, local history
+      tracking, system health checks and model retraining support.
+    </p>
+    <div class="fs-module-footer">
+      <span>CSV Export</span>
+      <span>History &amp; Reports</span>
+    </div>
+  </div>
+
+</div>
+
+<div class="fs-about-quote">
+  <span class="fs-quote-icon">✦</span>
+  <p>Building Trust in Digital Reviews Through Artificial Intelligence.</p>
+  <span class="fs-quote-caption">THE FAKESHIELD VISION</span>
+</div>
+
+</div>
+
+</main>
+
+<footer class="footer">
+  <span>FakeShield · Capstone Project </span>
+  <span>IIT Patna · TF-IDF · Sentiment Analysis</span>
+</footer>
+
+<script>
+let featureChartInstance = null;
+let bulkPieChartInstance = null;
+let latestBulkResults = [];
+
+const txtArea = document.getElementById("reviewInput");
+
+/* SAFE HTML DISPLAY */
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
+/* CSV DOWNLOAD */
+function downloadBulkCSV() {
+  if (!latestBulkResults.length) {
+    alert("No bulk results available to download.");
+    return;
+  }
+
+  const headers = ["Row", "Review Text", "System Verdict"];
+
+  const escapeCSV = value =>
+    '"' + String(value ?? "").replace(/"/g, '""') + '"';
+
+  const rows = latestBulkResults.map(item => [
+    item.id,
+    item.text,
+    item.verdict
+  ]);
+
+  const csvContent = [
+    headers.map(escapeCSV).join(","),
+    ...rows.map(row => row.map(escapeCSV).join(","))
+  ].join("\r\n");
+
+  const blob = new Blob(["\uFEFF" + csvContent], {
+    type: "text/csv;charset=utf-8;"
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = "fake_review_prediction_results.csv";
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/* CHARACTER COUNTER */
+txtArea.addEventListener("input", () => {
+  const text = txtArea.value.trim();
+  const words = text ? text.split(/\s+/).length : 0;
+
+  document.getElementById("charCount").innerText =
+    `${txtArea.value.length} characters · ${words} words`;
+});
+
+/* TAB SWITCHING */
+function switchTab(tab) {
+  const detector = document.getElementById("detector-section");
+  const about = document.getElementById("about-section");
+
+  document.getElementById("pill-detector").classList.toggle("active", tab === "detector");
+  document.getElementById("pill-about").classList.toggle("active", tab === "about");
+
+  detector.classList.toggle("hidden-section", tab !== "detector");
+  about.classList.toggle("hidden-section", tab !== "about");
+}
+
+/* CLEAR */
+function clearText() {
+  txtArea.value = "";
+  document.getElementById("charCount").innerText = "0 characters · 0 words";
+  document.getElementById("resultCard").classList.add("hidden");
+  document.getElementById("multiTextResultCard").classList.add("hidden-section");
+}
+
+/* SAMPLE DATA */
+function setSample(type) {
+  if (type === "genuine") {
+    txtArea.value =
+      "THE BATTERY BACKUP OF THIS PRODUCT IS EXCELLENT. IT EASILY LASTS FOR 8 HOURS. HIGHLY RECOMMENDED FOR DAILY USE.";
+  } else if (type === "fake") {
+    txtArea.value =
+      "WOW AMAZING PRODUCT!!! BUY IT RIGHT NOW!!! BEST AMAZING WOW WOW WOW!!!";
+  } else {
+    txtArea.value =
+      "This item is genuine and awesome!\n---\nTrash waste of money item product is bad!\n---\nNormal build, fast shipping delivery.";
+  }
+
+  txtArea.dispatchEvent(new Event("input"));
+}
+
+/* MAIN COUNTERS */
+function updateMainCounters(counters) {
+  if (!counters) return;
+
+  document.getElementById("totalCheckedCount").innerText = counters.total;
+  document.getElementById("genuineCheckedCount").innerText = counters.genuine;
+  document.getElementById("fakeCheckedCount").innerText = counters.fake;
+}
+
+/* SINGLE REVIEW CHART */
+function renderTelemetryGraph(wordCount, sentimentStr, subjectivityStr) {
+  const ctx = document.getElementById("telemetryChart").getContext("2d");
+
+  const sentimentScore =
+    sentimentStr === "Positive" ? 85 :
+    sentimentStr === "Negative" ? 25 : 50;
+
+  const subjectivityScore =
+    subjectivityStr === "Highly Opinionated" ? 90 :
+    subjectivityStr === "Moderate" ? 55 : 20;
+
+  if (featureChartInstance) featureChartInstance.destroy();
+
+  featureChartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["Word Density %", "Sentiment Polarity", "Subjectivity Weight"],
+      datasets: [{
+        label: "Feature Weight Metrics",
+        data: [Math.min(wordCount * 3, 100), sentimentScore, subjectivityScore],
+        backgroundColor: [
+          "rgba(0,198,255,.45)",
+          "rgba(56,239,125,.45)",
+          "rgba(155,89,182,.45)"
+        ],
+        borderColor: ["#00c6ff", "#38ef7d", "#9b59b6"],
+        borderWidth: 1.5,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: {
+          min: 0,
+          max: 100,
+          grid: { color: "rgba(255,255,255,.05)" },
+          ticks: { color: "#9ca3af" }
+        },
+        y: {
+          grid: { display: false },
+          ticks: { color: "#f3f4f6" }
+        }
+      }
+    }
+  });
+}
+
+/* SINGLE AND MULTIPLE REVIEW PREDICTION */
+async function analyzeReview() {
+  const val = txtArea.value.trim();
+
+  if (!val) {
+    alert("Please enter a review first.");
+    return;
+  }
+
+  const btnText = document.getElementById("btnText");
+  btnText.innerText = "Analyzing...";
+
+  try {
+    const res = await fetch("/predict", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ review: val })
+    });
+
+    const data = await res.json();
+    btnText.innerText = "Analyze Content";
+
+    if (!res.ok || data.error) {
+      alert(data.error || "Prediction failed.");
+      return;
+    }
+
+    updateMainCounters(data.counters);
+
+    if (!data.multiple_mode) {
+      document.getElementById("multiTextResultCard").classList.add("hidden-section");
+      document.getElementById("resultCard").classList.remove("hidden");
+
+      document.getElementById("featWordCount").innerText = data.features.word_count;
+
+      const pol = data.features.sentiment_polarity;
+      const sub = data.features.sentiment_subjectivity;
+
+      const sentiment =
+        pol > 0.2 ? "Positive" :
+        pol < -0.2 ? "Negative" : "Neutral";
+
+      const subjectivity =
+        sub > 0.6 ? "Highly Opinionated" :
+        sub > 0.25 ? "Moderate" : "Objective";
+
+      document.getElementById("featSentiment").innerText = sentiment;
+      document.getElementById("featSubjectivity").innerText = subjectivity;
+      document.getElementById("featExclamation").innerText = data.features.exclamation_count;
+      document.getElementById("confidenceNum").innerText = data.confidence;
+
+      const badge = document.getElementById("verdictBadge");
+      const title = document.getElementById("verdictTitle");
+      const ring = document.getElementById("ringFill");
+
+      ring.style.strokeDashoffset = 201 - (201 * data.confidence / 100);
+
+      if (data.label === "FAKE") {
+        badge.innerText = "❌";
+        badge.style.background = "rgba(239,68,68,.1)";
+        badge.style.color = "#ef4444";
+        title.innerText = "Likely a Fake Review";
+        title.style.color = "#ef4444";
+        ring.style.stroke = "#ef4444";
+      } else {
+        badge.innerText = "✅";
+        badge.style.background = "rgba(16,185,129,.1)";
+        badge.style.color = "#10b981";
+        title.innerText = "Looks Like a Real Review";
+        title.style.color = "#10b981";
+        ring.style.stroke = "#10b981";
+      }
+
+      renderTelemetryGraph(data.features.word_count, sentiment, subjectivity);
+
+    } else {
+      document.getElementById("resultCard").classList.add("hidden");
+
+      const multiCard = document.getElementById("multiTextResultCard");
+      multiCard.classList.remove("hidden-section");
+
+      document.getElementById("multiRealVal").innerText =
+        `${data.real_count} (${data.real_percentage}%)`;
+
+      document.getElementById("multiFakeVal").innerText =
+        `${data.fake_count} (${data.fake_percentage}%)`;
+
+      const container = document.getElementById("multiTextTableContainer");
+      container.innerHTML = "";
+
+      let tableHtml = `
+        <div id="multiReviewTableWrapper" style="margin-top:16px">
+          <div class="table-scroll">
+            <table class="result-table">
+              <thead>
+                <tr>
+                  <th>Index</th>
+                  <th>Review Content</th>
+                  <th>Verdict</th>
+                </tr>
+              </thead>
+              <tbody>
+      `;
+
+      (data.samples || []).forEach(sample => {
+        const color = sample.verdict === "FAKE" ? "#ef4444" : "#10b981";
+
+        tableHtml += `
+          <tr>
+            <td>${escapeHtml(sample.id)}</td>
+            <td class="review-cell" title="${escapeHtml(sample.text)}">${escapeHtml(sample.text)}</td>
+            <td style="color:${color};font-weight:bold">${escapeHtml(sample.verdict)}</td>
+          </tr>
+        `;
+      });
+
+      tableHtml += "</tbody></table></div></div>";
+      container.innerHTML = tableHtml;
+    }
+
+  } catch (err) {
+    btnText.innerText = "Analyze Content";
+    alert("Prediction failed: " + err.message);
+  }
+}
+
+/* BULK CSV PREDICTION */
+async function triggerBulkPredict() {
+  const fileInput = document.getElementById("bulkUploadFile");
+  const statusSpan = document.getElementById("bulkUploadStatus");
+  const btnText = document.getElementById("bulkBtnText");
+  const file = fileInput.files[0];
+
+  if (!file) return;
+
+  statusSpan.innerText = `Analyzing batch: ${file.name}`;
+  btnText.innerText = "Processing Dataset...";
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const res = await fetch("/bulk-predict", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
+
+    btnText.innerText = "Run Bulk Prediction";
+
+    if (!res.ok || !data.success) {
+      statusSpan.innerText = "Error: " + (data.error || "Prediction failed");
+      latestBulkResults = [];
+      return;
+    }
+
+    latestBulkResults = Array.isArray(data.samples) ? data.samples : [];
+
+    statusSpan.innerHTML =
+      `<span style="color:#38ef7d;font-weight:600">Scanned ${data.total_rows} rows successfully!</span>`;
+
+    const bulkSec = document.getElementById("bulkResultSection");
+    bulkSec.classList.remove("hidden-section");
+
+    document.getElementById("bulkRealVal").innerText =
+      `${data.real_count} (${data.real_percentage}%)`;
+
+    document.getElementById("bulkFakeVal").innerText =
+      `${data.fake_count} (${data.fake_percentage}%)`;
+
+    const oldTable = document.getElementById("bulkTableWrapper");
+    if (oldTable) oldTable.remove();
+
+    let tableHtml = `
+      <div id="bulkTableWrapper"
+           style="margin-top:24px;border-top:1px solid rgba(255,255,255,.1);padding-top:16px">
+
+        <h4 style="font-family:Syne,sans-serif;color:#fff;margin-bottom:12px">
+          🔍 Full Dataset Row-by-Row Audit Logs
+        </h4>
+
+        <button type="button"
+                class="download-csv-btn"
+                onclick="downloadBulkCSV()">
+          ⬇ Download Results as CSV
+        </button>
+
+        <div class="table-scroll">
+          <table class="result-table">
+            <thead>
+              <tr>
+                <th style="text-align:center">Row</th>
+                <th>Review Content</th>
+                <th style="text-align:center">System Verdict</th>
+              </tr>
+            </thead>
+            <tbody>
+    `;
+
+    latestBulkResults.forEach(sample => {
+      const isFake = sample.verdict === "FAKE";
+      const badgeColor = isFake ? "#ef4444" : "#10b981";
+      const bgBadge = isFake
+        ? "rgba(239,68,68,.1)"
+        : "rgba(16,185,129,.1)";
+
+      tableHtml += `
+        <tr>
+          <td style="text-align:center;color:#6b7280">
+            ${escapeHtml(sample.id)}
+          </td>
+
+          <td class="review-cell"
+              title="${escapeHtml(sample.text)}">
+            ${escapeHtml(sample.text)}
+          </td>
+
+          <td style="text-align:center">
+            <span style="color:${badgeColor};background:${bgBadge};
+                         padding:3px 6px;border-radius:4px;font-weight:bold">
+              ${escapeHtml(sample.verdict)}
+            </span>
+          </td>
+        </tr>
+      `;
+    });
+
+    tableHtml += `
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    bulkSec.insertAdjacentHTML("beforeend", tableHtml);
+
+    const ctx = document.getElementById("bulkPieChart").getContext("2d");
+
+    if (bulkPieChartInstance) {
+      bulkPieChartInstance.destroy();
+    }
+
+    bulkPieChartInstance = new Chart(ctx, {
+      type: "pie",
+      data: {
+        labels: [
+          "Genuine Customer Feedback",
+          "Deceptive/Spam Vectors"
+        ],
+        datasets: [{
+          data: [data.real_count, data.fake_count],
+          backgroundColor: ["#10b981", "#ef4444"],
+          borderWidth: 2,
+          borderColor: "#1e1e2f"
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: {
+              color: "#fff",
+              font: { family: "DM Sans", size: 12 }
+            }
+          }
+        }
+      }
+    });
+
+  } catch (err) {
+    btnText.innerText = "Run Bulk Prediction";
+    statusSpan.innerText = "Execution failed: " + err.message;
+    console.error("Bulk prediction error:", err);
+  }
+}
+
+/* MODEL RETRAINING */
+async function triggerLiveRetrain() {
+  const fileInput = document.getElementById("datasetUpload");
+  const statusSpan = document.getElementById("uploadStatus");
+  const btnText = document.getElementById("uploadBtnText");
+  const file = fileInput.files[0];
+
+  if (!file) return;
+
+  statusSpan.innerText = `Selected: ${file.name}`;
+  btnText.innerText = "Retraining Model...";
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const res = await fetch("/retrain", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
+
+    btnText.innerText = "📁 Upload CSV & Retrain";
+
+    if (data.success) {
+      statusSpan.innerText =
+        `Success! Model updated (${data.rows_processed} rows)`;
+
+      document.getElementById("modelBadge").innerText =
+        `ACCURACY: ${data.new_accuracy}%`;
+
+      alert(
+        `Model updated successfully!\nNew Validation Accuracy: ${data.new_accuracy}%`
+      );
+
+    } else {
+      statusSpan.innerText = "Error: " + data.error;
+      alert("Training failed: " + data.error);
+    }
+
+  } catch (err) {
+    btnText.innerText = "📁 Upload CSV & Retrain";
+    statusSpan.innerText = "Network error";
+    alert("Network connection failed: " + err.message);
+  }
+}
+
+/* MODEL HEALTH CHECK */
+fetch("/health")
+  .then(response => response.json())
+  .then(data => {
+    const badge = document.getElementById("modelBadge");
+
+    if (data.model_loaded && data.vectorizer_loaded) {
+      badge.textContent = "LIVE MODEL MODE";
+      badge.className = "model-badge live";
+      badge.style.background =
+        "linear-gradient(135deg,#11998e,#38ef7d)";
+    }
+  })
+  .catch(error => console.error("Health check failed:", error));
+
+</script>
+
+</body>
+</html>
