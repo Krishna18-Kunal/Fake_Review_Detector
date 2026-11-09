@@ -29,20 +29,20 @@ An AI/ML-based web application that detects potentially fake and genuine product
 
 ```text
 Fake_Review_Detector_Final/
-¦
+Â¦
 +-- app.py
 +-- requirements.txt
 +-- README.md
 +-- .gitignore
-¦
+Â¦
 +-- model/
-¦   +-- classifier_model.pkl
-¦   +-- tfidf_vectorizer.pkl
-¦
+Â¦   +-- classifier_model.pkl
+Â¦   +-- tfidf_vectorizer.pkl
+Â¦
 +-- static/
-¦   +-- css/
-¦       +-- style.css
-¦
+Â¦   +-- css/
+Â¦       +-- style.css
+Â¦
 +-- templates/
     +-- index.html
 ```
@@ -97,8 +97,8 @@ http://127.0.0.1:5000
 
 The application uses:
 
-- `classifier_model.pkl` – Trained machine learning classifier.
-- `tfidf_vectorizer.pkl` – TF-IDF text vectorizer.
+- `classifier_model.pkl` â€“ Trained machine learning classifier.
+- `tfidf_vectorizer.pkl` â€“ TF-IDF text vectorizer.
 
 Both files are stored inside the `model/` directory.
 
@@ -117,16 +117,6 @@ GitHub: https://github.com/Krishna18-Kunal
 ## Project Type
 
 Academic Machine Learning and Natural Language Processing Project.
-
-
-
-
-## Credits & Acknowledgements
-
-This project was further developed and maintained by Krishna Kunal.
-
-Acknowledgement:
-Rishabh Prasad Bhagat — Historical contributions to the initial repository setup and documentation
 
 
 
